@@ -1,5 +1,10 @@
 const BACKGROUND_COLOR = '#3E3E3E';
 
+// alterado depois que tiver o tamanho do canvas
+let size_rect_width = 0;
+let size_rect_height = 0;
+
+
 function initCanvas() {
     const canvas = document.querySelector('#canvas')
     canvas.zoom = 1
@@ -49,8 +54,10 @@ function initCanvas() {
     
     ctx.resetTransform()
     ctx.fillStyle = BACKGROUND_COLOR
-    ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight)
-    ctx.translate(canvas.clientWidth / 2 + x, canvas.clientHeight / 2 + y)
+    // ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight)
+    ctx.fillRect(0, 0, canvas.clientWidth/2, canvas.clientHeight/2)
+    // ctx.translate(canvas.clientWidth / 2 + x, canvas.clientHeight / 2 + y)
+    ctx.translate(0 + x, 0 + y)
     ctx.scale(zoom, zoom)
   }
   
