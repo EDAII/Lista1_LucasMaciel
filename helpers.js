@@ -1,9 +1,5 @@
 const BACKGROUND_COLOR = '#3E3E3E';
 
-// alterado depois que tiver o tamanho do canvas
-let size_rect_width = 0;
-let size_rect_height = 0;
-
 
 function initCanvas() {
     const canvas = document.querySelector('#canvas')
@@ -47,15 +43,15 @@ function initCanvas() {
     const ctx = canvas.getContext('2d')
     
     const zoom = canvas.zoom
-    const w = canvas.clientWidth
-    const h = canvas.clientHeight
+    const w = canvas.width
+    const h = canvas.height
     const x = canvas.positionX || 0
     const y = canvas.positionY || 0
     
     ctx.resetTransform()
     ctx.fillStyle = BACKGROUND_COLOR
     // ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight)
-    ctx.fillRect(0, 0, canvas.clientWidth/2, canvas.clientHeight/2)
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
     // ctx.translate(canvas.clientWidth / 2 + x, canvas.clientHeight / 2 + y)
     ctx.translate(0 + x, 0 + y)
     ctx.scale(zoom, zoom)
@@ -137,8 +133,4 @@ function initCanvas() {
     int = Math.max(int, 0)
     intI = 1 - int
     return `rgba(${s[0] * intI + e[0] * int}, ${s[1] * intI + e[1] * int}, ${s[2] * intI + e[2] * int}, ${s[3] * intI + e[3] * int})`
-  }
-  
-  function rand(min, max) {
-    return Math.random() * (max-min) + min
   }

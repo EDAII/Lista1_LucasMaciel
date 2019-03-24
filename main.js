@@ -1,43 +1,34 @@
-const MAX_ACCELERATION_MAGNITUDE = 10000
-const GRAVITATION_CONSTANT = 6.67e-11 * 10e10
-
 const TRACE_LENGTH_PARTS = 10
 const TRACE_LENGTH_SKIP_STEPS = 8
-const EXISTING_RADIUS_MIN = 2
-const MASS_GIVEAWAY_FACTOR = 0.2
 
 const OBJECT_NUMBER = 100
-const OBJECT_POSITION_RANGE = 1000
-const OBJECT_VELOCITY_RANGE = 100
-const OBJECT_RADIUS_RANGE_MIN = 3
-const OBJECT_RADIUS_RANGE_MAX = 40
 const FIXED_DT = 0.016
-
-var windowWidth = window.innerWidth;
-var windowHeight = window.innerHeight;
 
 let pos_x = 0;
 let pos_y = 0;
 
 function start() {
-    console.log('start');
-
     const canvas = initCanvas();
     const ctx = canvas.getContext('2d');
+    let numbers = [];
     const objects = [];
 
-    const size_rect = canvas.clientWidth / 2
+    const size_rect = canvas.width / 3
     const size_obj = size_rect / 12;
     const radius = size_obj / 2;
-
     let offsetX = radius;
     let offsetY = radius;
+
+    for (let i = 0; i < OBJECT_NUMBER; i++) {
+        // numbers[i] = rand(0, 1000);
+        numbers[i] = i;
+    }
 
     for (let i = 0; i < OBJECT_NUMBER; i++) {
         let object = new Object(
             new Vector(offsetX + pos_x * size_obj, offsetY + pos_y * size_obj),
             radius,
-            i
+            numbers[i]
         );
         objects.push(object);
 
@@ -176,17 +167,18 @@ class Object {
         ctx.font = `${this.font_size}pt Arial`; //Define Tamanho e fonte
         ctx.fillStyle = 'black'; //Define a cor
         ctx.fillText(message,
-            this.position.x - Math.floor(this.font_size / 2),
+            this.position.x - Math.floor(this.font_size),
             this.position.y + Math.floor(this.font_size / 2)); //Desenha a mensagem
 
     }
 
     color() {
-        return interpolateColorStyleMapping(this.radius, 10, 100,
-            [184, 233, 134, 0.8],
-            [242, 100, 83, 0.8]
-        );
+        return `rgba(242, 100, 83, 0.8)`
     }
+}
+
+function rand(min, max) {
+    return Math.floor(Math.random() * (max-min) + min)
 }
 
 window.onload = start;
