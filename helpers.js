@@ -53,7 +53,7 @@ function initCanvas() {
     // ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight)
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     // ctx.translate(canvas.clientWidth / 2 + x, canvas.clientHeight / 2 + y)
-    ctx.translate(0 + x, 0 + y)
+    // ctx.translate(0 + x, 0 + y)
     ctx.scale(zoom, zoom)
   }
   

@@ -1,25 +1,25 @@
 const TRACE_LENGTH_PARTS = 10
 const TRACE_LENGTH_SKIP_STEPS = 8
-
 const OBJECT_NUMBER = 100
 const FIXED_DT = 0.5
+const SEARCH_TEXT_SIZE = 35
 
-let pos_x = 0;
-let pos_y = 0;
 
 function start() {
     const canvas = initCanvas();
     const ctx = canvas.getContext('2d');
     let numbers = [];
     const objects = [];
+    let pos_x = 0;
+    let pos_y = 0;
 
     const size_rect = canvas.width / 3
     const size_obj = size_rect / 12;
     const radius = size_obj / 2;
-    let offsetX = radius;
-    let offsetY = radius;
+    let offsetX = radius+10; // distancia da borda
+    let offsetY = radius+70;
 
-    const number_searched = rand(0, 100);
+    const number_searched = rand(0, 100); // numero a ser encontrado
 
     for (let i = 0; i < OBJECT_NUMBER; i++) {
         // numbers[i] = rand(0, 1000);
@@ -129,6 +129,14 @@ class Simulation {
     }
 
     render(ctx) {
+        ctx.beginPath();
+
+        var message = "Busca Binaria"; //Define a mensagem
+        ctx.font = `${SEARCH_TEXT_SIZE}pt Arial`; //Define Tamanho e fonte
+        ctx.fillStyle = 'white'; //Define a cor
+        ctx.fillText(message,
+            10,
+            60); //Desenha a mensagem
         this.objects.forEach(object => object.render(ctx));
     }
 
