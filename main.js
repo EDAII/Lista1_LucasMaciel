@@ -2,7 +2,7 @@ const TRACE_LENGTH_PARTS = 10
 const TRACE_LENGTH_SKIP_STEPS = 8
 
 const OBJECT_NUMBER = 100
-const FIXED_DT = 0.016
+const FIXED_DT = 0.5
 
 let pos_x = 0;
 let pos_y = 0;
@@ -18,6 +18,8 @@ function start() {
     const radius = size_obj / 2;
     let offsetX = radius;
     let offsetY = radius;
+
+    const number_searched = rand(0, 100);
 
     for (let i = 0; i < OBJECT_NUMBER; i++) {
         // numbers[i] = rand(0, 1000);
@@ -39,11 +41,24 @@ function start() {
         }
     }
 
-    const simulation = new Simulation(objects);
+    const simulation = new Simulation(objects, number_searched);
+
+    // utilizando setInterval para fazer uma busca assistida
+    // busca binaria
+    let inf = 0;
+    let sup = objects.length - 1;
+    let middle;
+    let count = 0;
 
     setInterval(() => {
+        // busca binaria
+        if (inf <= sup) {
+            count++;
+
+            [inf, sup, middle] = simulation.updateBinarySearch(FIXED_DT, inf, sup, middle);
+        }
+
         updateCanvas(canvas);
-        simulation.update(FIXED_DT);
         simulation.render(ctx);
     }, FIXED_DT * 1000);
 
@@ -95,13 +110,22 @@ class Vector {
 }
 
 class Simulation {
-    constructor(objects) {
+    constructor(objects, number_searched) {
         this.objects = objects || [];
         this.objects.forEach(object => object.simulation = this);
+        this.number_searched = number_searched;
     }
 
-    update(dt = 0.016) {
+    updateBinarySearch(dt = FIXED_DT, inf, sup, middle) {
+
+        middle = Math.floor((inf + sup) / 2);
+        // if (number_searched == objects[middle].value) return middle;
+        if (this.number_searched < this.objects[middle].value) sup = middle - 1;
+        else inf = middle + 1;
+
         this.objects.forEach(object => object.update(dt));
+        this.objects[middle].setColor(`rgba(0, 128, 0, 0.8)`);
+        return [inf, sup, middle]
     }
 
     render(ctx) {
@@ -120,10 +144,10 @@ class Object {
         this.trace = [];
         this.font_size = radius * 0.6;
         this.value = value;
+        this.color = `rgba(242, 100, 83, 0.8)`;
     }
 
-    update(dt = 0.016) {
-        // Integrate to position
+    update(dt = FIXED_DT) {
         // this.position.add(new Vector(5, 0));
 
         // Add to trace
@@ -159,7 +183,7 @@ class Object {
         ctx.beginPath();
         ctx.arc(this.position.x, this.position.y, this.radius, 0, 360);
         ctx.strokeStyle = this.exceeded_max_acceleration ? '#FF0000' : 'transparent';
-        ctx.fillStyle = this.color();
+        ctx.fillStyle = this.color;
         ctx.stroke();
         ctx.fill();
 
@@ -172,13 +196,17 @@ class Object {
 
     }
 
-    color() {
-        return `rgba(242, 100, 83, 0.8)`
+    setColor(color) {
+        this.color = color
     }
+
+    // color() {
+    //     return this.color
+    // }
 }
 
 function rand(min, max) {
-    return Math.floor(Math.random() * (max-min) + min)
+    return Math.floor(Math.random() * (max - min) + min)
 }
 
 window.onload = start;
