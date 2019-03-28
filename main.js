@@ -24,7 +24,7 @@ function start() {
     let offsetX = radius + 10; // distancia da borda
     let offsetY = radius + 70;
 
-    const number_searched = rand(0, OBJECTS_NUMBER); // numero a ser encontrado
+    const number_searched = prompt(`Qual numero você deseja buscar(0-${OBJECT_VALUE_RANGE})?`);
 
     for (let i = 0; i < OBJECTS_NUMBER; i++) {
         let num;
@@ -39,6 +39,7 @@ function start() {
         if (num1 < num2) return -1;
     });
 
+    console.log("vetor inteiro: ", numbers);
     // criar simulation para busca binaria
     for (let i = 0; i < OBJECTS_NUMBER; i++) {
         let object = new Object(
@@ -91,40 +92,6 @@ class Vector {
     toString() {
         return `[${this.x.toFixed(2)}, ${this.y.toFixed(2)}]`
     }
-
-    add(vector) {
-        this.x += vector.x;
-        this.y += vector.y;
-        return this;
-    }
-
-    sub(vector) {
-        this.x -= vector.x;
-        this.y -= vector.y;
-        return this;
-    }
-
-    scale(factorX, factorY = factorX) {
-        this.x *= factorX
-        this.y *= factorY
-        return this
-    }
-
-    magnitude() {
-        return Math.sqrt((this.x * this.x) + (this.y * this.y));
-    }
-
-    normalize() {
-        let magnitude = this.magnitude();
-
-        this.x /= magnitude;
-        this.y /= magnitude;
-        return this;
-    }
-
-    copy() {
-        return new Vector(this.x, this.y);
-    }
 }
 
 class Simulation {
@@ -159,7 +126,8 @@ class Simulation {
         }
         this.objects.forEach(object => object.update(dt));
         this.objects[kindex].setColor(`rgba(0, 50, 180, 0.8)`);
-        return kindex+=1
+        console.log("dentro: ", kindex+1);
+        return kindex+1
     }
 
     render(ctx) {
@@ -192,18 +160,6 @@ class Object {
     }
 
     update(dt = FIXED_DT) {
-        // this.position.add(new Vector(5, 0));
-
-        // Add to trace
-        // let snapshot = { position: this.position.copy(), velocity: this.velocity.magnitude() }
-        // if (this.traceStep > TRACE_LENGTH_SKIP_STEPS) {
-        //     this.trace.push(snapshot)
-        //     this.trace = this.trace.slice(Math.max(0, this.trace.length - TRACE_LENGTH_PARTS))
-        //     this.traceStep = 0
-        // } else {
-        //     this.traceStep = (this.traceStep || 0) + 1
-        //     this.trace[this.trace.length - 1] = snapshot
-        // }
     }
 
     render(ctx) {
@@ -243,10 +199,6 @@ class Object {
     setColor(color) {
         this.color = color
     }
-
-    // color() {
-    //     return this.color
-    // }
 }
 
 function rand(min, max) {
@@ -280,8 +232,9 @@ function search_thread(binarySearchSimulation, indexSearchSimulation, ctx) {
     // temporario
     // busca o maior indice proximo ao valor buscado
     for (let i = 0; i < indexTable.length; i++) {
-        if (indexSearchSimulation.objects[indexTable[i]].value > indexSearchSimulation.number_searched) {
-            indexFinded = indexTable[i - 1];
+        if (indexSearchSimulation.objects[indexTable[i]].value < indexSearchSimulation.number_searched &&
+            indexSearchSimulation.objects[indexTable[i + 1]].value > indexSearchSimulation.number_searched) {
+            indexFinded = indexTable[i];
             break;
         }
     }
@@ -297,7 +250,9 @@ function search_thread(binarySearchSimulation, indexSearchSimulation, ctx) {
 
         // busca sequencial indexada
         if (indexFinded != true){
+            console.log(indexFinded)
             indexFinded = indexSearchSimulation.updateSequenceSearch(FIXED_DT, indexFinded);
+            console.log("fora: ", indexFinded);
         }
 
         updateCanvas(canvas);
