@@ -1,6 +1,7 @@
 const TRACE_LENGTH_PARTS = 10;
 const TRACE_LENGTH_SKIP_STEPS = 8;
 const OBJECTS_NUMBER = 100;
+const OBJECT_VALUE_RANGE = 200;
 const FIXED_DT = 0.5;
 const SEARCH_TEXT_SIZE = 25;
 const DISTANCE_BETWEEN_SIMULATIONS = window.innerWidth / 4;
@@ -23,12 +24,20 @@ function start() {
     let offsetX = radius + 10; // distancia da borda
     let offsetY = radius + 70;
 
-    const number_searched = rand(0, 100); // numero a ser encontrado
+    const number_searched = rand(0, OBJECTS_NUMBER); // numero a ser encontrado
 
     for (let i = 0; i < OBJECTS_NUMBER; i++) {
-        // numbers[i] = rand(0, 1000);
-        numbers[i] = i;
+        let num;
+        do{
+            num = rand(0, OBJECT_VALUE_RANGE);
+        } while(numbers.indexOf(num) >= 0);
+        numbers[i] = num;
     }
+    numbers.sort(function (num1, num2){
+        if (num1 == num2) return 0;
+        if (num1 > num2) return 1;
+        if (num1 < num2) return -1;
+    });
 
     // criar simulation para busca binaria
     for (let i = 0; i < OBJECTS_NUMBER; i++) {
@@ -45,7 +54,7 @@ function start() {
             pos_y++;
         }
     }
-    const binarySearchSimulation = new Simulation(binarySearchObjects, number_searched, "Busca Binaria", offsetX - radius, offsetY - 20);
+    const binarySearchSimulation = new Simulation(binarySearchObjects, number_searched, "Busca Binaria", offsetX - radius, offsetY - 30);
 
     // criar simulation para busca sequencial indexada
     offsetX = radius + size_rect + DISTANCE_BETWEEN_SIMULATIONS; // distancia da borda
@@ -68,7 +77,7 @@ function start() {
     }
 
 
-    const indexSearchSimulation = new Simulation(indexSearchObjects, number_searched, "Busca Sequencial Indexada", offsetX - radius, offsetY - 20);
+    const indexSearchSimulation = new Simulation(indexSearchObjects, number_searched, "Busca Sequencial Indexada", offsetX - radius, offsetY - 30);
 
     search_thread(binarySearchSimulation, indexSearchSimulation, ctx);
 }
@@ -143,14 +152,14 @@ class Simulation {
     }
 
     // metodo de busca sequencial
-    updateSequenceSearch(dt = FIXED_DT, index) {
-        if (this.number_searched == this.objects[index].value) {
-            this.objects[index].setColor(`rgba(0, 128, 0, 0.8)`);
+    updateSequenceSearch(dt = FIXED_DT, kindex) {
+        if (this.number_searched == this.objects[kindex].value) {
+            this.objects[kindex].setColor(`rgba(0, 128, 0, 0.8)`);
             return true;
         }
         this.objects.forEach(object => object.update(dt));
-        this.objects[index].setColor(`rgba(0, 50, 180, 0.8)`);
-        return index+=1
+        this.objects[kindex].setColor(`rgba(0, 50, 180, 0.8)`);
+        return kindex+=1
     }
 
     render(ctx) {
@@ -179,7 +188,7 @@ class Object {
         this.trace = [];
         this.font_size = radius * 0.6;
         this.value = value;
-        this.color = `rgba(242, 100, 83, 0.8)`;
+        this.color = `rgba(255, 255, 255, 0.8)`;
     }
 
     update(dt = FIXED_DT) {
@@ -250,9 +259,10 @@ function generateIndexTable(list) {
     // dividir lista em n pedacos
     const blockSize = size / RATIO_INDEX_TABLE;
 
-    for (let i_list = 0, i_table = 0; i_list < size; i_list += blockSize, i_table++) {
-        indexTable[i_table] = list.objects[i_list].value;
+    for (let index = 0, kindex = 0; index < size; index += blockSize, kindex++) {
+        indexTable[kindex] = index;
     }
+    console.log(indexTable);
 
     return indexTable;
 }
@@ -270,16 +280,19 @@ function search_thread(binarySearchSimulation, indexSearchSimulation, ctx) {
     // temporario
     // busca o maior indice proximo ao valor buscado
     for (let i = 0; i < indexTable.length; i++) {
-        if (Math.abs(indexSearchSimulation.number_searched - indexTable[i]) < INDEX_BLOCK_SIZE) {
-            indexFinded = indexTable[i];
+        if (indexSearchSimulation.objects[indexTable[i]].value > indexSearchSimulation.number_searched) {
+            indexFinded = indexTable[i - 1];
             break;
         }
     }
+    console.log("indice proximo: ", indexFinded);
 
     setInterval(() => {
         // busca binaria
         if (inf <= sup) {
             [inf, sup, middle] = binarySearchSimulation.updateBinarySearch(FIXED_DT, inf, sup, middle);
+        } else{
+            console.log("valor ",binarySearchSimulation.number_searched," nao entrado");
         }
 
         // busca sequencial indexada
