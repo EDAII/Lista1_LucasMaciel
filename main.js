@@ -294,8 +294,9 @@ function search_thread(textScreen, binarySearchSimulation, indexSearchSimulation
     setInterval(() => {
         updateCanvas(canvas);
         // busca binaria
-        if (inf <= sup) {
-            [inf, sup, middle] = binarySearchSimulation.updateBinarySearch(inf, sup, middle);
+        if (inf <= sup && situationBinarySearch !== true) {
+            situationBinarySearch = binarySearchSimulation.updateBinarySearch(inf, sup, middle);
+            if (situationBinarySearch !== true) [inf, sup, middle] = situationBinarySearch;
             if (inf > sup) {
                 binarySearchSimulation.changeNumbernotFound();
             }
