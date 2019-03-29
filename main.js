@@ -91,7 +91,7 @@ function start() {
         offsetX - radius, offsetY - 50, offsetX, size_obj);
 
     // gerar tabela de indices com o tipo Object
-    indexSearchSimulation.generateIndexTable(size_obj, offsetX - 60, offsetY, radius);
+    indexSearchSimulation.generateIndexTable();
     search_thread(textScreen, binarySearchSimulation, indexSearchSimulation, ctx);
 }
 
@@ -198,17 +198,22 @@ class SimulationSequenceIndex {
     }
 
     // metodo de busca sequencial
-    updateSequenceSearch(kindex) {
+    updateSequenceSearch(index) {
         this.step_count++;
-        if (this.objects[kindex].value > this.number_searched) {
+        if (this.objects[index].value > this.number_searched) {
             return false;
         }
-        if (this.number_searched == this.objects[kindex].value) {
-            this.objects[kindex].setColor(`rgba(0, 128, 0, 0.8)`);
+        if (this.number_searched == this.objects[index].value) {
+            this.objects[index].setColor(`rgba(0, 128, 0, 0.8)`);
             return true;
         }
+        this.objects[index].setColor(`rgba(0, 50, 180, 0.8)`);
+        return index + 1
+    }
+
+    updateIndexSearch(kindex) {
+        this.step_count++;
         this.objects[kindex].setColor(`rgba(0, 50, 180, 0.8)`);
-        return kindex + 1
     }
 
     renderNotFound(ctx) {
@@ -238,7 +243,7 @@ class SimulationSequenceIndex {
         this.objects.forEach(object => object.render(ctx));
     }
 
-    generateIndexTable(sizeObjITable, posXTable, posYTable, radius) {
+    generateIndexTable() {
         const size = this.objects.length;
         // dividir lista em n pedacos
         const blockSize = size / RATIO_INDEX_TABLE;
@@ -323,26 +328,17 @@ function search_thread(textScreen, binarySearchSimulation, indexSearchSimulation
     let inf = 0;
     let sup = binarySearchSimulation.objects.length - 1;
     let middle;
-
-    let indexFinded = 0;
-
-    // temporario
-    // busca o maior indice proximo ao valor buscado
-    const indexTable = indexSearchSimulation.getIndextable();
     
+    const indexTable = indexSearchSimulation.getIndextable();
+
     for (let i = 0; i < indexTable.length; i++) {
         console.log(indexSearchSimulation.objects[indexTable[i]].value);
     }
 
-    for (let i = 0; i < indexTable.length; i++) {
-        if (indexSearchSimulation.objects[indexTable[i]].value < indexSearchSimulation.number_searched &&
-            indexSearchSimulation.objects[indexTable[i + 1]].value > indexSearchSimulation.number_searched) {
-            indexFinded = indexTable[i];
-            break;
-        }
-    }
-
     let situationBinarySearch = [];
+    let kindexFinded = false;
+    let kindex = 0; // indice da busca na tabela de indices
+    let index = 0; // indice da busca sequencial
     setInterval(() => {
         updateCanvas(canvas);
         // busca binaria
@@ -355,13 +351,23 @@ function search_thread(textScreen, binarySearchSimulation, indexSearchSimulation
         }
 
         // busca sequencial indexada
-        if (indexFinded !== true && indexFinded !== false) {
-            indexFinded = indexSearchSimulation.updateSequenceSearch(indexFinded);
-            if (indexFinded === false) {
-
+        if (kindexFinded === false) {
+            // busca o maior indice proximo ao valor buscado
+            if (indexSearchSimulation.objects[indexTable[kindex]].value < indexSearchSimulation.number_searched &&
+                indexSearchSimulation.objects[indexTable[kindex + 1]].value > indexSearchSimulation.number_searched) {
+                index = indexTable[kindex];
+                kindexFinded = true;
+                console.log("index");
+            }
+            indexSearchSimulation.updateIndexSearch(indexTable[kindex]);
+        } else if (kindexFinded === true && index !== false && index !== true) {
+            console.log("finded")
+            index = indexSearchSimulation.updateSequenceSearch(index);
+            if (index === false) {
                 indexSearchSimulation.changeNumbernotFound();
             }
         }
+        kindex++;
 
         textScreen.render(ctx);
         binarySearchSimulation.render(ctx);
