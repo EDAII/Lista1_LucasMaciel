@@ -156,6 +156,9 @@ class Simulation {
     // metodo de busca sequencial
     updateSequenceSearch(kindex) {
         this.step_count++;
+        if (this.objects[kindex].value > this.number_searched) {
+            return false;
+        }
         if (this.number_searched == this.objects[kindex].value) {
             this.objects[kindex].setColor(`rgba(0, 128, 0, 0.8)`);
             return true;
@@ -278,6 +281,9 @@ function search_thread(textScreen, binarySearchSimulation, indexSearchSimulation
 
     const indexTable = generateIndexTable(indexSearchSimulation);
     let indexFinded = 0;
+    for (let i = 0; i < indexTable.length; i++){
+        console.log(indexSearchSimulation.objects[indexTable[i]].value);
+    }
 
     // temporario
     // busca o maior indice proximo ao valor buscado
@@ -290,7 +296,6 @@ function search_thread(textScreen, binarySearchSimulation, indexSearchSimulation
     }
 
     let situationBinarySearch = [];
-    let limitSequeceSearch = INDEX_BLOCK_SIZE;
     setInterval(() => {
         updateCanvas(canvas);
         // busca binaria
@@ -303,10 +308,10 @@ function search_thread(textScreen, binarySearchSimulation, indexSearchSimulation
         }
 
         // busca sequencial indexada
-        if (indexFinded !== true && limitSequeceSearch > 0) {
-            limitSequeceSearch--;
+        if (indexFinded !== true && indexFinded !== false) {
             indexFinded = indexSearchSimulation.updateSequenceSearch(indexFinded);
-            if (limitSequeceSearch <= 0 && indexFinded !== true) {
+            if (indexFinded === false) {
+
                 indexSearchSimulation.changeNumbernotFound();
             }
         }
