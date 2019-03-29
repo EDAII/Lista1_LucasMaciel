@@ -3,8 +3,9 @@ const TRACE_LENGTH_SKIP_STEPS = 8;
 const OBJECTS_NUMBER = 100;
 const OBJECT_VALUE_RANGE = 200;
 const FIXED_DT = 0.5;
-const SEARCH_TEXT_SIZE = 25;
+const DISTANCE_TEXT_SCREEN = window.innerWidth / 20;
 const DISTANCE_BETWEEN_SIMULATIONS = window.innerWidth / 4;
+const SEARCH_TEXT_SIZE = DISTANCE_BETWEEN_SIMULATIONS * 0.05;
 const RATIO_INDEX_TABLE = 10;
 const INDEX_BLOCK_SIZE = OBJECTS_NUMBER / RATIO_INDEX_TABLE;
 
@@ -28,18 +29,17 @@ function start() {
 
     for (let i = 0; i < OBJECTS_NUMBER; i++) {
         let num;
-        do{
+        do {
             num = rand(0, OBJECT_VALUE_RANGE);
-        } while(numbers.indexOf(num) >= 0);
+        } while (numbers.indexOf(num) >= 0);
         numbers[i] = num;
     }
-    numbers.sort(function (num1, num2){
+    numbers.sort(function (num1, num2) {
         if (num1 == num2) return 0;
         if (num1 > num2) return 1;
         if (num1 < num2) return -1;
     });
 
-    console.log("vetor inteiro: ", numbers);
     // criar simulation para busca binaria
     for (let i = 0; i < OBJECTS_NUMBER; i++) {
         let object = new Object(
@@ -55,13 +55,22 @@ function start() {
             pos_y++;
         }
     }
-    const binarySearchSimulation = new Simulation(binarySearchObjects, number_searched, "Busca Binaria", offsetX - radius, offsetY - 30);
+    const binarySearchSimulation = new Simulation(binarySearchObjects, number_searched, "Busca Binaria", offsetX - radius, offsetY - 50);
+
+    offsetX = radius + size_rect + DISTANCE_TEXT_SCREEN; // distancia da borda
+    offsetY = radius + 40;
+    pos_x = 0;
+    pos_y = 0;
+
+    const textScreen = new TextScreen("Número Procurado", number_searched, offsetX, offsetY);
 
     // criar simulation para busca sequencial indexada
     offsetX = radius + size_rect + DISTANCE_BETWEEN_SIMULATIONS; // distancia da borda
     offsetY = radius + 70;
     pos_x = 0;
     pos_y = 0;
+
+
     for (let i = 0; i < OBJECTS_NUMBER; i++) {
         let object = new Object(
             new Vector(offsetX + pos_x * size_obj, offsetY + pos_y * size_obj),
@@ -78,9 +87,9 @@ function start() {
     }
 
 
-    const indexSearchSimulation = new Simulation(indexSearchObjects, number_searched, "Busca Sequencial Indexada", offsetX - radius, offsetY - 30);
+    const indexSearchSimulation = new Simulation(indexSearchObjects, number_searched, "Busca Sequencial Indexada", offsetX - radius, offsetY - 50);
 
-    search_thread(binarySearchSimulation, indexSearchSimulation, ctx);
+    search_thread(textScreen, binarySearchSimulation, indexSearchSimulation, ctx);
 }
 
 class Vector {
@@ -94,49 +103,91 @@ class Vector {
     }
 }
 
+class TextScreen {
+    constructor(message, number_searched, posX, posY) {
+        this.message = message;
+        this.number_searched = number_searched;
+        this.posX = posX;
+        this.posY = posY;
+    }
+
+    render(ctx) {
+        ctx.beginPath();
+        var message = this.message;
+        ctx.font = `${SEARCH_TEXT_SIZE}pt Arial`;
+        ctx.fillStyle = 'white';
+        ctx.fillText(message, this.posX, this.posY);
+
+
+        var number = this.number_searched;
+        ctx.font = `${SEARCH_TEXT_SIZE}pt Arial`;
+        ctx.fillStyle = 'green';
+        ctx.fillText(number, this.posX, this.posY + 20);
+    }
+}
+
 class Simulation {
-    constructor(objects, number_searched, message = "", pos_msg_x, pos_msg_y) {
+    constructor(objects, number_searched, message = "", posMsgX, posMsgY) {
         this.objects = objects || [];
         this.objects.forEach(object => object.simulation = this);
         this.number_searched = number_searched;
         this.message = message;
-        this.pos_msg_x = pos_msg_x;
-        this.pos_msg_y = pos_msg_y;
+        this.posMsgX = posMsgX;
+        this.posMsgY = posMsgY;
+        this.step_count = 0;
+        this.numberNotFound = false;
     }
 
     // metodo de busca binaria
-    updateBinarySearch(dt = FIXED_DT, inf, sup, middle) {
+    updateBinarySearch(inf, sup, middle) {
+        this.step_count++;
         middle = Math.floor((inf + sup) / 2);
         if (this.number_searched == this.objects[middle].value) {
             this.objects[middle].setColor(`rgba(0, 128, 0, 0.8)`);
-            return [inf, sup, middle]
+            return true;
         }
         if (this.number_searched < this.objects[middle].value) sup = middle - 1;
         else inf = middle + 1;
-        this.objects.forEach(object => object.update(dt));
+
         this.objects[middle].setColor(`rgba(0, 50, 180, 0.8)`);
         return [inf, sup, middle]
     }
 
     // metodo de busca sequencial
-    updateSequenceSearch(dt = FIXED_DT, kindex) {
+    updateSequenceSearch(kindex) {
+        this.step_count++;
         if (this.number_searched == this.objects[kindex].value) {
             this.objects[kindex].setColor(`rgba(0, 128, 0, 0.8)`);
             return true;
         }
-        this.objects.forEach(object => object.update(dt));
         this.objects[kindex].setColor(`rgba(0, 50, 180, 0.8)`);
-        console.log("dentro: ", kindex+1);
-        return kindex+1
+        return kindex + 1
+    }
+
+    renderNotFound(ctx) {
+        ctx.beginPath();
+        ctx.font = `${SEARCH_TEXT_SIZE}pt Arial`;
+        ctx.fillStyle = 'red';
+        ctx.fillText("Número não Encontrado", this.posMsgX + 110, this.posMsgY + 20);
+    }
+
+    changeNumbernotFound() {
+        this.numberNotFound = true;
     }
 
     render(ctx) {
+        if (this.numberNotFound === true) {
+            this.renderNotFound(ctx);
+        }
         ctx.beginPath();
-
-        var message = this.message; //Define a mensagem
         ctx.font = `${SEARCH_TEXT_SIZE}pt Arial`; //Define Tamanho e fonte
         ctx.fillStyle = 'white'; //Define a cor
-        ctx.fillText(message, this.pos_msg_x, this.pos_msg_y); //Desenha a mensagem
+        ctx.fillText(this.message, this.posMsgX, this.posMsgY); //Desenha a mensagem
+
+        ctx.font = `${SEARCH_TEXT_SIZE}pt Arial`; //Define Tamanho e fonte
+        ctx.fillStyle = 'green'; //Define a cor
+        ctx.fillText("Passos: " + this.step_count, this.posMsgX, this.posMsgY + 20); //Desenha a mensagem
+
         this.objects.forEach(object => object.render(ctx));
     }
 
@@ -159,7 +210,7 @@ class Object {
         this.color = `rgba(255, 255, 255, 0.8)`;
     }
 
-    update(dt = FIXED_DT) {
+    update() {
     }
 
     render(ctx) {
@@ -214,12 +265,11 @@ function generateIndexTable(list) {
     for (let index = 0, kindex = 0; index < size; index += blockSize, kindex++) {
         indexTable[kindex] = index;
     }
-    console.log(indexTable);
 
     return indexTable;
 }
 
-function search_thread(binarySearchSimulation, indexSearchSimulation, ctx) {
+function search_thread(textScreen, binarySearchSimulation, indexSearchSimulation, ctx) {
     // utilizando setInterval para fazer uma busca assistida
     // busca binaria
     let inf = 0;
@@ -238,24 +288,29 @@ function search_thread(binarySearchSimulation, indexSearchSimulation, ctx) {
             break;
         }
     }
-    console.log("indice proximo: ", indexFinded);
 
+    let situationBinarySearch = [];
+    let limitSequeceSearch = INDEX_BLOCK_SIZE;
     setInterval(() => {
+        updateCanvas(canvas);
         // busca binaria
         if (inf <= sup) {
-            [inf, sup, middle] = binarySearchSimulation.updateBinarySearch(FIXED_DT, inf, sup, middle);
-        } else{
-            console.log("valor ",binarySearchSimulation.number_searched," nao entrado");
+            [inf, sup, middle] = binarySearchSimulation.updateBinarySearch(inf, sup, middle);
+            if (inf > sup) {
+                binarySearchSimulation.changeNumbernotFound();
+            }
         }
 
         // busca sequencial indexada
-        if (indexFinded != true){
-            console.log(indexFinded)
-            indexFinded = indexSearchSimulation.updateSequenceSearch(FIXED_DT, indexFinded);
-            console.log("fora: ", indexFinded);
+        if (indexFinded !== true && limitSequeceSearch > 0) {
+            limitSequeceSearch--;
+            indexFinded = indexSearchSimulation.updateSequenceSearch(indexFinded);
+            if (limitSequeceSearch <= 0 && indexFinded !== true) {
+                indexSearchSimulation.changeNumbernotFound();
+            }
         }
 
-        updateCanvas(canvas);
+        textScreen.render(ctx);
         binarySearchSimulation.render(ctx);
         indexSearchSimulation.render(ctx);
     }, FIXED_DT * 1000);
