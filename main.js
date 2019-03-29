@@ -1,18 +1,23 @@
-const TRACE_LENGTH_PARTS = 10;
 const TRACE_LENGTH_SKIP_STEPS = 8;
-const OBJECTS_NUMBER = 100;
-const OBJECT_VALUE_RANGE = 200;
 const FIXED_DT = 0.5;
 const DISTANCE_TEXT_SCREEN = window.innerWidth / 20;
 const DISTANCE_BETWEEN_SIMULATIONS = window.innerWidth / 4;
 const SEARCH_TEXT_SIZE = DISTANCE_BETWEEN_SIMULATIONS * 0.05;
 const RATIO_INDEX_TABLE = 10;
-const INDEX_BLOCK_SIZE = OBJECTS_NUMBER / RATIO_INDEX_TABLE;
 
 
 function start() {
     const canvas = initCanvas();
     const ctx = canvas.getContext('2d');
+
+    const objectsNumber = 100;
+    let objectsRanger = 200;
+    let number_searched = 0;
+    
+    do {
+        number_searched = prompt(`Qual numero você deseja buscar(0-${objectsRanger})?`);
+    } while (number_searched > objectsRanger && number_searched < 0);
+
     let numbers = [];
     const binarySearchObjects = [];
     const indexSearchObjects = [];
@@ -25,12 +30,10 @@ function start() {
     let offsetX = radius + 10; // distancia da borda
     let offsetY = radius + 70;
 
-    const number_searched = prompt(`Qual numero você deseja buscar(0-${OBJECT_VALUE_RANGE})?`);
-
-    for (let i = 0; i < OBJECTS_NUMBER; i++) {
+    for (let i = 0; i < objectsNumber; i++) {
         let num;
         do {
-            num = rand(0, OBJECT_VALUE_RANGE);
+            num = rand(0, objectsRanger);
         } while (numbers.indexOf(num) >= 0);
         numbers[i] = num;
     }
@@ -41,7 +44,7 @@ function start() {
     });
 
     // criar simulation para busca binaria
-    for (let i = 0; i < OBJECTS_NUMBER; i++) {
+    for (let i = 0; i < objectsNumber; i++) {
         let object = new Object(
             new Vector(offsetX + pos_x * size_obj, offsetY + pos_y * size_obj),
             radius,
@@ -71,7 +74,7 @@ function start() {
     pos_y = 0;
 
 
-    for (let i = 0; i < OBJECTS_NUMBER; i++) {
+    for (let i = 0; i < objectsNumber; i++) {
         let object = new Object(
             new Vector(offsetX + pos_x * size_obj, offsetY + pos_y * size_obj),
             radius,
@@ -279,19 +282,6 @@ class Object {
 
     render(ctx) {
         this.renderObject(ctx);
-        this.renderTrace(ctx);
-    }
-
-    renderTrace(ctx) {
-        if (this.trace.length > 1) {
-            for (let i = 1; i < this.trace.length; i++) {
-                ctx.beginPath()
-                ctx.moveTo(this.trace[i - 1].position.x, this.trace[i - 1].position.y)
-                ctx.lineTo(this.trace[i].position.x, this.trace[i].position.y)
-                ctx.strokeStyle = colorForTrace(i, TRACE_LENGTH_PARTS)
-                ctx.stroke()
-            }
-        }
     }
 
     renderObject(ctx) {
@@ -328,7 +318,7 @@ function search_thread(textScreen, binarySearchSimulation, indexSearchSimulation
     let inf = 0;
     let sup = binarySearchSimulation.objects.length - 1;
     let middle;
-    
+
     const indexTable = indexSearchSimulation.getIndextable();
 
     for (let i = 0; i < indexTable.length; i++) {
@@ -355,13 +345,11 @@ function search_thread(textScreen, binarySearchSimulation, indexSearchSimulation
             // busca o maior indice proximo ao valor buscado
             if (indexSearchSimulation.objects[indexTable[kindex]].value < indexSearchSimulation.number_searched &&
                 indexSearchSimulation.objects[indexTable[kindex + 1]].value > indexSearchSimulation.number_searched) {
-                index = indexTable[kindex];
+                index = indexTable[kindex] + 1;
                 kindexFinded = true;
-                console.log("index");
             }
             indexSearchSimulation.updateIndexSearch(indexTable[kindex]);
         } else if (kindexFinded === true && index !== false && index !== true) {
-            console.log("finded")
             index = indexSearchSimulation.updateSequenceSearch(index);
             if (index === false) {
                 indexSearchSimulation.changeNumbernotFound();
