@@ -55,7 +55,7 @@ function start() {
             pos_y++;
         }
     }
-    const binarySearchSimulation = new Simulation(binarySearchObjects, number_searched, "Busca Binaria", offsetX - radius, offsetY - 50);
+    const binarySearchSimulation = new SimulationBinary(binarySearchObjects, number_searched, "Busca Binaria", offsetX - radius, offsetY - 50);
 
     offsetX = radius + size_rect + DISTANCE_TEXT_SCREEN; // distancia da borda
     offsetY = radius + 40;
@@ -86,9 +86,12 @@ function start() {
         }
     }
 
+    const indexSearchSimulation = new SimulationSequenceIndex(
+        indexSearchObjects, number_searched, "Busca Sequencial Indexada",
+        offsetX - radius, offsetY - 50, offsetX, size_obj);
 
-    const indexSearchSimulation = new Simulation(indexSearchObjects, number_searched, "Busca Sequencial Indexada", offsetX - radius, offsetY - 50);
-
+    // gerar tabela de indices com o tipo Object
+    indexSearchSimulation.generateIndexTable(size_obj, offsetX - 60, offsetY, radius);
     search_thread(textScreen, binarySearchSimulation, indexSearchSimulation, ctx);
 }
 
@@ -126,7 +129,7 @@ class TextScreen {
     }
 }
 
-class Simulation {
+class SimulationBinary {
     constructor(objects, number_searched, message = "", posMsgX, posMsgY) {
         this.objects = objects || [];
         this.objects.forEach(object => object.simulation = this);
@@ -151,6 +154,47 @@ class Simulation {
 
         this.objects[middle].setColor(`rgba(0, 50, 180, 0.8)`);
         return [inf, sup, middle]
+    }
+
+    renderNotFound(ctx) {
+        ctx.beginPath();
+        ctx.font = `${SEARCH_TEXT_SIZE}pt Arial`;
+        ctx.fillStyle = 'red';
+        ctx.fillText("Número não Encontrado", this.posMsgX + 130, this.posMsgY + 20);
+    }
+
+    changeNumbernotFound() {
+        this.numberNotFound = true;
+    }
+
+    render(ctx) {
+        if (this.numberNotFound === true) {
+            this.renderNotFound(ctx);
+        }
+        ctx.beginPath();
+        ctx.font = `${SEARCH_TEXT_SIZE}pt Arial`; //Define Tamanho e fonte
+        ctx.fillStyle = 'white'; //Define a cor
+        ctx.fillText(this.message, this.posMsgX, this.posMsgY); //Desenha a mensagem
+
+        ctx.font = `${SEARCH_TEXT_SIZE}pt Arial`; //Define Tamanho e fonte
+        ctx.fillStyle = 'green'; //Define a cor
+        ctx.fillText("Passos: " + this.step_count, this.posMsgX, this.posMsgY + 20); //Desenha a mensagem
+
+        this.objects.forEach(object => object.render(ctx));
+    }
+}
+
+class SimulationSequenceIndex {
+    constructor(objects, number_searched, message = "", posMsgX, posMsgY) {
+        this.objects = objects || [];
+        this.objects.forEach(object => object.simulation = this);
+        this.number_searched = number_searched;
+        this.message = message;
+        this.posMsgX = posMsgX;
+        this.posMsgY = posMsgY;
+        this.step_count = 0;
+        this.numberNotFound = false;
+        this.indexTable = [];
     }
 
     // metodo de busca sequencial
@@ -194,12 +238,24 @@ class Simulation {
         this.objects.forEach(object => object.render(ctx));
     }
 
-    removeObject(object) {
-        this.objects = this.objects.filter(p => p != object)
+    generateIndexTable(sizeObjITable, posXTable, posYTable, radius) {
+        const size = this.objects.length;
+        // dividir lista em n pedacos
+        const blockSize = size / RATIO_INDEX_TABLE;
+        let posY = 0;
+
+        for (let kindex = 0; kindex < size; kindex += blockSize) {
+            this.indexTable.push(kindex);
+            this.objects[kindex].setColor("gray");
+
+            posY++;
+        }
+
+        return true;
     }
 
-    copy() {
-        return new Simulation(this.objects, this.number_searched);
+    getIndextable() {
+        return this.indexTable;
     }
 }
 
@@ -259,18 +315,7 @@ function rand(min, max) {
     return Math.floor(Math.random() * (max - min) + min)
 }
 
-function generateIndexTable(list) {
-    const size = list.objects.length;
-    let indexTable = [];
-    // dividir lista em n pedacos
-    const blockSize = size / RATIO_INDEX_TABLE;
 
-    for (let index = 0, kindex = 0; index < size; index += blockSize, kindex++) {
-        indexTable[kindex] = index;
-    }
-
-    return indexTable;
-}
 
 function search_thread(textScreen, binarySearchSimulation, indexSearchSimulation, ctx) {
     // utilizando setInterval para fazer uma busca assistida
@@ -279,14 +324,16 @@ function search_thread(textScreen, binarySearchSimulation, indexSearchSimulation
     let sup = binarySearchSimulation.objects.length - 1;
     let middle;
 
-    const indexTable = generateIndexTable(indexSearchSimulation);
     let indexFinded = 0;
-    for (let i = 0; i < indexTable.length; i++){
-        console.log(indexSearchSimulation.objects[indexTable[i]].value);
-    }
 
     // temporario
     // busca o maior indice proximo ao valor buscado
+    const indexTable = indexSearchSimulation.getIndextable();
+    
+    for (let i = 0; i < indexTable.length; i++) {
+        console.log(indexSearchSimulation.objects[indexTable[i]].value);
+    }
+
     for (let i = 0; i < indexTable.length; i++) {
         if (indexSearchSimulation.objects[indexTable[i]].value < indexSearchSimulation.number_searched &&
             indexSearchSimulation.objects[indexTable[i + 1]].value > indexSearchSimulation.number_searched) {
