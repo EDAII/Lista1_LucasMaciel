@@ -354,11 +354,14 @@ function search_thread(textScreen, binarySearchSimulation, indexSearchSimulation
             }
             else indexSearchSimulation.updateIndexSearch(indexTable[kindex]);
         }
-        else if (kindexFinded === true && index !== false && index !== true) {
+        else if (kindexFinded === true && index !== false && index !== true && index < indexSearchSimulation.objects.length) {
             index = indexSearchSimulation.updateSequenceSearch(index);
             if (index === false) {
                 indexSearchSimulation.changeNumbernotFound();
             }
+        }
+        else if (index >= indexSearchSimulation.objects.length) {
+            indexSearchSimulation.changeNumbernotFound();
         }
         kindex++;
 
