@@ -13,7 +13,7 @@ function start() {
     const objectsNumber = 100;
     let objectsRanger = 200;
     let number_searched = 0;
-    
+
     do {
         number_searched = prompt(`Qual numero você deseja buscar(0-${objectsRanger})?`);
     } while (number_searched > objectsRanger && number_searched < 0);
@@ -343,13 +343,18 @@ function search_thread(textScreen, binarySearchSimulation, indexSearchSimulation
         // busca sequencial indexada
         if (kindexFinded === false) {
             // busca o maior indice proximo ao valor buscado
-            if (indexSearchSimulation.objects[indexTable[kindex]].value < indexSearchSimulation.number_searched &&
-                indexSearchSimulation.objects[indexTable[kindex + 1]].value > indexSearchSimulation.number_searched) {
-                index = indexTable[kindex] + 1;
+            if (kindex == indexTable.length) {
+                index = indexTable[kindex - 1];
                 kindexFinded = true;
             }
-            indexSearchSimulation.updateIndexSearch(indexTable[kindex]);
-        } else if (kindexFinded === true && index !== false && index !== true) {
+            else if (indexSearchSimulation.objects[indexTable[kindex]].value > indexSearchSimulation.number_searched) {
+                index = indexTable[kindex - 1];
+                kindexFinded = true;
+                // indexSearchSimulation.updateIndexSearch(indexTable[kindex]);
+            }
+            else indexSearchSimulation.updateIndexSearch(indexTable[kindex]);
+        }
+        else if (kindexFinded === true && index !== false && index !== true) {
             index = indexSearchSimulation.updateSequenceSearch(index);
             if (index === false) {
                 indexSearchSimulation.changeNumbernotFound();
